@@ -10,7 +10,7 @@ class PublicMeta(type):
     def __new__(cls, classname, supers, classdict):
         newdict = {}
         for k, v in classdict.items():
-            if k.startswith('_' + classname):
+            if not callable(v) and k.startswith('_' + classname):
                 newattr = k.replace('_' + classname + '__', '')
                 newdict[newattr] = classdict.get(k)
         classdict.update(newdict)
@@ -25,8 +25,12 @@ class A(metaclass=PublicMeta):
     def __init__(self, x):
         self.x = x
 
+    def __func(self):
+        print('ohoho')
+
 
 a = A(10)
 print(a.var)
+a._A__func()
 a.pretty_func()
 a.do_things(10)
