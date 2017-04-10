@@ -15,16 +15,14 @@ def parser_args():
 if __name__ == "__main__":
     args = parser_args()
     if args.id:
-        url_for_id = "{}id={}&appid={}".format(url, args.id, API_KEY)
-        data = requests.get(url_for_id).json()
+        data = requests.get(url, dict(id=args.id, appid=API_KEY)).json()
         kelvin_temp = data['main']['temp']
         celsius_temp = kelvin_temp - 273.15
         print("Current temp in {}: {}{} C".format(data['name'], round(celsius_temp, 2), chr(176)))
 
     if args.location:
         location_args = " ".join(args.location)
-        url_for_location = "{}q={}&appid={}".format(url, location_args, API_KEY)
-        data = requests.get(url_for_location).json()
+        data = requests.get(url, dict(q=location_args, appid=API_KEY)).json()
         kelvin_temp = data['main']['temp']
         celsius_temp = kelvin_temp - 273.15
         print("Current temp in {}: {}{} C".format(data['name'], round(celsius_temp, 2), chr(176)))
