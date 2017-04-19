@@ -3,7 +3,7 @@ import re
 first_list = ['fu', 'tofu', 'snafu', 'dsds']
 second_list = ['futz', 'fusillade', 'functional', 'discombobulated']
 
-regexp = re.compile(r'^.*fu$')
+regexp = re.compile(r'.*fu\b')
 
 
 def func(x):
