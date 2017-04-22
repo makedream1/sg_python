@@ -2,14 +2,9 @@ import asyncio
 from aiohttp import ClientSession
 from lxml import etree
 import re
-import psycopg2
 from sqlalchemy.orm import sessionmaker
 from alchemy.model import Base, Posts
 from sqlalchemy import create_engine
-
-
-# conn = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='2367'")
-# cur = conn.cursor()
 
 
 async def fetch(url, session):
@@ -87,35 +82,13 @@ if __name__ == '__main__':
         articles.append(text)
     price, currency = find_money(articles)
 
-    # cur.execute('''
-    #     CREATE TABLE IF NOT EXISTS posts(
-    #        id SERIAL PRIMARY KEY,
-    #        author TEXT NOT NULL,
-    #        url TEXT NOT NULL,
-    #        topic TEXT NOT NULL,
-    #        article_text TEXT NOT NULL,
-    #        price TEXT NOT NULL,
-    #        currency TEXT NOT NULL
-    #     );
-    #     ''')
-    #
-    # count = 0
-    # for i in range(len(authors)):
-    #     cur.execute("""INSERT INTO posts (author, url, topic, article_text, price, currency)
-    #                        SELECT %s, %s, %s, %s, %s, %s
-    #                        WHERE NOT EXISTS (SELECT * FROM posts where topic = %s and author = %s)""",
-    #                 (authors[i], pages[i], topics[i], articles[i], price[i], currency[i], topics[i],
-    #                  authors[i]))
-    #     count += 1
-    #
-    # conn.commit()
-    # conn.close()
-    # print('found: {}'.format(count))
     engine = create_engine('postgresql://postgres:2367@localhost:5432/postgres')
     Base.metadata.create_all(engine)
     DBSession = sessionmaker(engine)
     session = DBSession()
+    count = 0
     for i in range(len(topics)):
+
         new_post = Posts(author=authors[i],
                          url=pages[i],
                          topic=topics[i],
@@ -123,5 +96,7 @@ if __name__ == '__main__':
                          price=price[i],
                          currency=currency[i])
         session.add(new_post)
+        count += 1
 
+    print('found: ', count)
     session.commit()
