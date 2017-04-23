@@ -3,7 +3,7 @@ from aiohttp import ClientSession
 from lxml import etree
 import re
 from sqlalchemy.orm import sessionmaker
-from alchemy.model import Base, Posts
+from model import Base, Posts
 from sqlalchemy import create_engine
 
 
@@ -17,6 +17,7 @@ async def get_pages(r):
 
     async with ClientSession() as session:
         for item in range(r):
+            item = 1 if item == 0 else item
             task = asyncio.ensure_future(fetch(url.format(item * 40), session))
             tasks.append(task)
         return await asyncio.gather(*tasks)
@@ -82,21 +83,29 @@ if __name__ == '__main__':
         articles.append(text)
     price, currency = find_money(articles)
 
-    engine = create_engine('postgresql://postgres:2367@localhost:5432/postgres')
+    engine = create_engine('postgresql://postgres:1234@localhost:5432/postgres')
     Base.metadata.create_all(engine)
     DBSession = sessionmaker(engine)
     session = DBSession()
     count = 0
     for i in range(len(topics)):
 
-        new_post = Posts(author=authors[i],
-                         url=pages[i],
-                         topic=topics[i],
-                         article_text=articles[i],
-                         price=price[i],
-                         currency=currency[i])
-        session.add(new_post)
-        count += 1
+        # get unique link without session id
+        link = pages[i].split('&sid')[0]
+
+        object = session.query(Posts).filter(Posts.url == link).first()
+
+        if not object:
+            new_post = Posts(author=authors[i],
+                             url=link,
+                             topic=topics[i],
+                             article_text=articles[i],
+                             price=price[i],
+                             currency=currency[i])
+
+            session.add(new_post)
+            count += 1
+
 
     print('found: ', count)
     session.commit()
