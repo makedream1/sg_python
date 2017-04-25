@@ -12,18 +12,7 @@ async def fetch(url, session):
         return await response.text()
 
 
-async def get_pages(r):
-    tasks = []
-
-    async with ClientSession() as session:
-        for item in range(r):
-            item = 1 if item == 0 else item
-            task = asyncio.ensure_future(fetch(url.format(item * 40), session))
-            tasks.append(task)
-        return await asyncio.gather(*tasks)
-
-
-async def get_topics(pages):
+async def get(pages):
     tasks = []
     async with ClientSession() as session:
         for item in pages:
@@ -63,17 +52,23 @@ def find_money(articles):
 
 if __name__ == '__main__':
     url = "http://forum.overclockers.ua/viewforum.php?f=26&start={}"
+    how_much = input('Pages (Default 1): ')
+    how_much = 1 if not how_much else how_much
+    pages = []
+
+    for item in range(int(how_much)):
+        item = 1 if item == 0 else item
+        pages.append(url.format(item * 40))
 
     loop = asyncio.get_event_loop()
-    how_much = int(input('Pages: '))
 
-    return_pages = loop.run_until_complete(get_pages(how_much))
+    return_pages = loop.run_until_complete(get(pages))
 
     topics = []
     authors = []
     pages = parse(return_pages)
 
-    return_topics = loop.run_until_complete(get_topics(pages))
+    return_topics = loop.run_until_complete(get(pages))
 
     articles = []
     for item in return_topics:
