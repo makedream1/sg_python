@@ -3,7 +3,7 @@ from aiohttp import ClientSession
 from lxml import etree
 import re
 from sqlalchemy.orm import sessionmaker
-from model import Base, Posts
+from model import Base, Posts, Authors
 from sqlalchemy import create_engine
 
 
@@ -44,6 +44,9 @@ def find_money(articles):
         if not result:
             prices.append(0)
             currency.append('грн')
+        elif not result[0][0] or not result[0][1]:
+            prices.append(0)
+            currency.append('грн')
         else:
             prices.append(result[0][0])
             currency.append(result[0][1])
@@ -77,21 +80,24 @@ if __name__ == '__main__':
         text = " ".join(text)
         articles.append(text)
     price, currency = find_money(articles)
-
-    engine = create_engine('postgresql://postgres:1234@localhost:5432/postgres')
+    engine = create_engine('postgresql://postgres:2367@localhost:5432/postgres')
     Base.metadata.create_all(engine)
     DBSession = sessionmaker(engine)
     session = DBSession()
     count = 0
     for i in range(len(topics)):
 
-        # get unique link without session id
+        duplicate_author = session.query(Authors).filter(Authors.author == authors[i]).first()
+
+        if not duplicate_author:
+            add_authors = Authors(author=authors[i])
+            session.add(add_authors)
         link = pages[i].split('&sid')[0]
+        author_id = session.query(Authors.id).filter(Authors.author == authors[i])
+        duplicate = session.query(Posts).filter(Posts.url == link).first()
 
-        object = session.query(Posts).filter(Posts.url == link).first()
-
-        if not object:
-            new_post = Posts(author=authors[i],
+        if not duplicate:
+            new_post = Posts(author_id=author_id,
                              url=link,
                              topic=topics[i],
                              article_text=articles[i],
@@ -100,7 +106,6 @@ if __name__ == '__main__':
 
             session.add(new_post)
             count += 1
-
 
     print('found: ', count)
     session.commit()
